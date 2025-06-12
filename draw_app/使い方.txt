@@ -1,0 +1,1 @@
+ターミナルで1_cancel/draw_appに移動してflutter runを実行したときにlib内のmain.dartが実行されます
