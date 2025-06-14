@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io'; //モバイルのファイル用
+import 'package:camera/camera.dart'; //XFile用
+import 'camera_utils/camera_handler.dart'; //CameraHandlerをインポート
 
 //
 // 画面 B
