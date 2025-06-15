@@ -18,7 +18,8 @@ class App extends StatelessWidget {
     // パスと画面の組み合わせ
     routes: [
       GoRoute(path: '/a', builder: (context, state) => const PageA()),
-      GoRoute(path: '/b', builder: (context, state) => const PageB()),
+      //GoRoute(path: '/b', builder: (context, state) => const PageB()),
+      GoRoute(path: '/b', builder: (context, state) => const Page2Draw()),
       GoRoute(path: '/c', builder: (context, state) => const PageC()),
     ],
   );
