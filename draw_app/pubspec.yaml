@@ -8,12 +8,19 @@ environment:
   sdk: ^3.8.0
 
 dependencies:
+  go_router:
+  flutter_riverpod:
+  flutter:
+    sdk: flutter
+  camera: ^0.11.0
+  path_provider: ^2.0.15
+  path: ^1.8.0
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
   google_fonts:
   freezed_annotation: ^2.4.1  
   percent_indicator:
-  go_router:
-  flutter:
-    sdk: flutter
   cupertino_icons: ^1.0.8
   
 

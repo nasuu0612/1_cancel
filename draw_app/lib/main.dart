@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 /*
   最新のFlutterに対応するため、動画と少しコードが変わりました
 */
-
 main() {
   final app = App();
   runApp(app);
@@ -25,7 +24,8 @@ class App extends StatelessWidget {
     routes: [
       GoRoute(path: '/title', builder: (context, state) => const PageTitle()),
       GoRoute(path: '/a', builder: (context, state) => const PageA()),
-      GoRoute(path: '/b', builder: (context, state) => const PageB()),
+      //GoRoute(path: '/b', builder: (context, state) => const PageB()),
+      GoRoute(path: '/b', builder: (context, state) => const Page2Draw()),
       GoRoute(path: '/c', builder: (context, state) => const PageC()),
     ],
   );

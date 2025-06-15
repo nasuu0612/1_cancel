@@ -48,7 +48,6 @@ class _PageAState extends State<PageA> {
     context.push('/b');
   }
 
-
   @override
   Widget build(BuildContext context) {
     final appBar = AppBar(
