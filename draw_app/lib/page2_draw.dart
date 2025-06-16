@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
+import 'camera_utils/camera_handler.dart'; //CameraHandlerをインポート
+import 'package:camera/camera.dart'; //XFile用
 import 'package:go_router/go_router.dart';
 import 'dart:io'; //モバイルのファイル用
-import 'package:camera/camera.dart'; //XFile用
-import 'camera_utils/camera_handler.dart'; //CameraHandlerをインポート
 
-//
-// 画面 B
-//
-
-//元のPageBクラスをPage2Drawに変更してStatefulWidgetに変更
-//カメラを使うためにはStatefulWidgetが必要になる
 class Page2Draw extends StatefulWidget {
   const Page2Draw({Key? key}) : super(key: key);
 
@@ -21,16 +17,20 @@ class _Page2DrawState extends State<Page2Draw> {
   final CameraHandler _cameraHandler = CameraHandler();
   XFile? _imageFile; //キャプチャした画像を保存する変数
   bool _showCameraPreview = false;
+  Uint8List? _upperImageBytes; // ダミーで読み込むマスク画像
 
   @override
   void initState() {
     super.initState();
-    //必要があればカメラの初期化を行う
-    //_cameraHandler.initializeCamera().then((_) {
-    //  if (mounted && _cameraHandler.isCameraInitialized) {
-    //    setState(() {});
-    //  }
-    //});
+    _loadDummyMask();
+  }
+
+  Future<void> _loadDummyMask() async {
+    // assets/images/mask.png を読み込む
+    final bytes = await rootBundle.load('assets/images/mask.png');
+    setState(() {
+      _upperImageBytes = bytes.buffer.asUint8List();
+    });
   }
 
   @override
@@ -41,15 +41,15 @@ class _Page2DrawState extends State<Page2Draw> {
 
   //完了ボタンのアクション(元のファイルのpushメソッドの部分)
   void _completeAndProceed() {
-    if (_imageFile != null) {
-      //ここで_imageFileを使った編集処理を挟める
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('編集処理に入ったところです'))
-      );
-      context.push('/c'); //PageCに進む
+    if (_imageFile != null && _upperImageBytes != null) {
+      // カメラ画像（downer）とマスク画像（upper）をpageT_editに渡す
+      context.push('/t', extra: {
+        'underImageFile': File(_imageFile!.path),
+        'upperImageBytes': _upperImageBytes,
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('写真が撮影・選択されていない状態です'))
+        const SnackBar(content: Text('写真またはマスク画像がありません')),
       );
     }
   }
@@ -102,52 +102,12 @@ class _Page2DrawState extends State<Page2Draw> {
     final XFile? picture = await _cameraHandler.takePicture();
 
     if (picture != null) {
-      if (!mounted) return; //非同期処理後にウィジェットが破棄されている可能性をチェック
-
-      bool? retake = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false, //ダイアログ以外の領域をタップしても閉じない
-        builder: (BuildContext context) {
-          return AlertDialog( //アラートダイアログで写真の確認をする
-            title: const Text('写真を確認(title)'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.file(File(picture.path), height: 200, fit: BoxFit.contain), //撮影した写真を表示
-                const SizedBox(height: 10), //写真とボタンの間のスペース
-                const Text('この写真を使用しますか?'),
-              ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('再撮影'),
-                onPressed: () {
-                  Navigator.of(context).pop(true); //再撮影を選択したとき
-                },
-              ),
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop(false); //OKを選択したとき
-                },
-              ),
-            ],
-          );
-        },
-      );
-
-      if (retake == true) {
-        //再撮影する場合は状態はカメラプレビューのまま
-        setState(() {
-          _imageFile = null; //以前の画像はクリア
-        });
-      } else {
-        //この写真を利用する場合
-        setState(() {
-          _imageFile = picture; //撮影した写真を保存
-          _showCameraPreview = false; //カメラプレビューを非表示にする
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _imageFile = picture; //撮影した写真を保存
+        _showCameraPreview = false; //カメラプレビューを非表示にする
+        _cameraHandler.dispose(); //カメラのリソースを解放する
+      });
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,9 +127,11 @@ class _Page2DrawState extends State<Page2Draw> {
     Widget mainContent;
     if (_showCameraPreview) {
       if (_cameraHandler.isCameraInitialized && _cameraHandler.controller != null) {
-        mainContent = AspectRatio(
-          aspectRatio: _cameraHandler.controller!.value.aspectRatio,
-          child: CameraPreviewWidget(cameraHandler: _cameraHandler),
+        mainContent = Center(
+          child: AspectRatio(
+            aspectRatio: 3 / 4, //カメラプレビューのアスペクト比
+            child: CameraPreviewWidget(cameraHandler: _cameraHandler),
+          ),
         );
       } else {
         //カメラ初期化中or失敗
@@ -251,6 +213,28 @@ class _Page2DrawState extends State<Page2Draw> {
       body: Stack(
         children: [
           mainContent, //カメラプレビューor画像or初期メッセージ
+          if (_upperImageBytes != null)
+            Positioned(
+              top: 30,
+              left: 30,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.green, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  children: [
+                    const Text('マスク画像（ダミー）プレビュー'),
+                    SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: Image.memory(_upperImageBytes!),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Align(
             alignment: Alignment.bottomRight, //画面右下に配置
             child: Padding(
@@ -267,67 +251,16 @@ class _Page2DrawState extends State<Page2Draw> {
   }
 }
 
-//元の部分(確認後削除する部分)
-/*class PageB extends StatelessWidget {
-  const PageB({super.key});
-
-  // 進むボタンを押したとき
-  push(BuildContext context) {
-    // 画面 C へ進む
-    context.push('/c');
-  }
-
-  // 戻るボタンを押したとき
-  back(BuildContext context) {
-    // 前の画面 へ戻る
-    context.pop();
-  }
+// CameraPreviewWidget: カメラプレビュー表示用
+class CameraPreviewWidget extends StatelessWidget {
+  final CameraHandler cameraHandler;
+  const CameraPreviewWidget({Key? key, required this.cameraHandler}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // 画面の上に表示するバー
-    final appBar = AppBar(
-      backgroundColor: Colors.green,
-      title: const Text('Draw'),
-    );
-
-    // 進むボタン
-    final goButton = ElevatedButton(
-      onPressed: () => push(context),
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-      child: const Text('完了'),
-    );
-
-    // 戻るボタン
-    final backButton = ElevatedButton(
-      onPressed: () => back(context),
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-      child: const Text('< 戻る'),
-    );
-
-    // 画面全体
-    return Scaffold(
-      appBar: appBar,
-      body: Stack(
-        children: [
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  backButton,
-                  const SizedBox(width: 70), // ボタンの間のスペース
-                  goButton,
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    if (!cameraHandler.isCameraInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return CameraPreview(cameraHandler.controller!);
   }
 }
-*/
-

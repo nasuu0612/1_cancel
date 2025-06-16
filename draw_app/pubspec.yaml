@@ -28,7 +28,6 @@ dev_dependencies:
   freezed: ^2.4.6
   build_runner: ^2.4.6
   json_serializable: 
-  flutter_riverpod:
   flutter_test:
     sdk: flutter
 

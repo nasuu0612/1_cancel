@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -5,7 +6,9 @@ import 'package:go_router/go_router.dart';
 // 画面 C
 //
 class PageC extends StatelessWidget {
-  const PageC({super.key});
+  final File? editedImageFile;
+
+  const PageC({Key? key, this.editedImageFile}) : super(key: key);
 
   push(BuildContext context) {
     // 画面 a へ進む
@@ -47,6 +50,8 @@ class PageC extends StatelessWidget {
       appBar: appBar,
       body: Stack(
         children: [
+          if (editedImageFile != null)
+            Center(child: Image.file(editedImageFile!)),
           Align(
             alignment: Alignment.bottomRight,
             child: Padding(

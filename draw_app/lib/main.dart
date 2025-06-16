@@ -3,7 +3,9 @@ import 'page0_title.dart';
 import 'page1_home.dart';
 import 'page2_draw.dart';
 import 'page3_share.dart';
+import 'page2-2_edit.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
 
 /*
   最新のFlutterに対応するため、動画と少しコードが変わりました
@@ -26,7 +28,19 @@ class App extends StatelessWidget {
       GoRoute(path: '/a', builder: (context, state) => const PageA()),
       //GoRoute(path: '/b', builder: (context, state) => const PageB()),
       GoRoute(path: '/b', builder: (context, state) => const Page2Draw()),
-      GoRoute(path: '/c', builder: (context, state) => const PageC()),
+      GoRoute(path: '/b2', builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>?;
+        return Page2Edit(
+          underImageFile: args?['underImageFile'],
+          upperImageBytes: args?['upperImageBytes'],
+        );
+      }),
+      //必要なデータが未生成の場合はextraを使う
+      GoRoute(path: '/c', builder: (context, state) {
+        //画像ファイルをextraで受け取る
+        final file = state.extra as File?;
+        return PageC(editedImageFile: file);
+      }),
     ],
   );
 
