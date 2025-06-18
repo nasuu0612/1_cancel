@@ -8,6 +8,10 @@ environment:
   sdk: ^3.8.0
 
 dependencies:
+  device_preview: ^1.1.0
+  google_fonts:
+  freezed_annotation: ^2.4.1  
+  percent_indicator:
   go_router:
   flutter_riverpod:
   flutter:
@@ -37,5 +41,6 @@ dev_dependencies:
 flutter:
   assets:
      - assets/images/
+     - assets/google_fonts/
   uses-material-design: true
 
