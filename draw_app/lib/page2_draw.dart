@@ -42,15 +42,18 @@ class _Page2DrawState extends State<Page2Draw> {
   //完了ボタンのアクション(元のファイルのpushメソッドの部分)
   void _completeAndProceed() {
     if (_imageFile != null && _upperImageBytes != null) {
-      // カメラ画像（downer）とマスク画像（upper）をpageT_editに渡す
-      context.push('/t', extra: {
-        'underImageFile': File(_imageFile!.path),
-        'upperImageBytes': _upperImageBytes,
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('写真またはマスク画像がありません')),
+      // カメラ画像（downer）とマスク画像（upper）をpage2-1_selectに渡す
+      context.push(
+        '/b1',
+        extra: {
+          'underImageFile': File(_imageFile!.path),
+          'upperImageBytes': _upperImageBytes,
+        },
       );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('写真またはマスク画像がありません')));
     }
   }
 
@@ -82,19 +85,20 @@ class _Page2DrawState extends State<Page2Draw> {
       });
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('カメラを起動できない状態です')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('カメラを起動できない状態です')));
       }
     }
   }
 
   Future<void> _takePicture() async {
-    if (!_cameraHandler.isCameraInitialized || _cameraHandler.controller == null) {
+    if (!_cameraHandler.isCameraInitialized ||
+        _cameraHandler.controller == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('カメラが準備できていません')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('カメラが準備できていません')));
       }
       return;
     }
@@ -110,9 +114,9 @@ class _Page2DrawState extends State<Page2Draw> {
       });
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('写真の撮影に失敗しました')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('写真の撮影に失敗しました')));
       }
     }
   }
@@ -126,7 +130,8 @@ class _Page2DrawState extends State<Page2Draw> {
 
     Widget mainContent;
     if (_showCameraPreview) {
-      if (_cameraHandler.isCameraInitialized && _cameraHandler.controller != null) {
+      if (_cameraHandler.isCameraInitialized &&
+          _cameraHandler.controller != null) {
         mainContent = Center(
           child: AspectRatio(
             aspectRatio: 3 / 4, //カメラプレビューのアスペクト比
@@ -145,9 +150,7 @@ class _Page2DrawState extends State<Page2Draw> {
         ),
       );
     } else {
-      mainContent = const Center(
-        child: Text('「カメラ起動」ボタンを押して撮影してください'),
-      );
+      mainContent = const Center(child: Text('「カメラ起動」ボタンを押して撮影してください'));
     }
 
     List<Widget> actionButtons = [];
@@ -161,14 +164,14 @@ class _Page2DrawState extends State<Page2Draw> {
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
           child: const Text('キャンセル'),
-         ),
-         const SizedBox(width: 20), //ボタン間のスペース
+        ),
+        const SizedBox(width: 20), //ボタン間のスペース
 
-         ElevatedButton(
+        ElevatedButton(
           onPressed: _takePicture,
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
           child: const Text('撮影'),
-         ),
+        ),
       ];
     } else if (_imageFile != null) {
       actionButtons = [
@@ -194,7 +197,7 @@ class _Page2DrawState extends State<Page2Draw> {
       //初期状態
       actionButtons = [
         ElevatedButton(
-          onPressed: _goBack,//通常の戻る動作
+          onPressed: _goBack, //通常の戻る動作
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           child: const Text('< 戻る'),
         ),
@@ -254,7 +257,8 @@ class _Page2DrawState extends State<Page2Draw> {
 // CameraPreviewWidget: カメラプレビュー表示用
 class CameraPreviewWidget extends StatelessWidget {
   final CameraHandler cameraHandler;
-  const CameraPreviewWidget({Key? key, required this.cameraHandler}) : super(key: key);
+  const CameraPreviewWidget({Key? key, required this.cameraHandler})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
