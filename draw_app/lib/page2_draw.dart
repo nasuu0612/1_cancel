@@ -44,7 +44,7 @@ class _Page2DrawState extends State<Page2Draw> {
   void _completeAndProceed() {
     if (_imageFile != null && _upperImageBytes != null) {
       // カメラ画像（downer）とマスク画像（upper）をpageT_editに渡す
-      context.push('/t', extra: {
+      context.push('/b2', extra: {
         'underImageFile': File(_imageFile!.path),
         'upperImageBytes': _upperImageBytes,
       });
@@ -242,13 +242,6 @@ class _Page2DrawState extends State<Page2Draw> {
               padding: const EdgeInsets.all(16.0),
               child: Text("画像を編集してください",
               ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: image,
             ),
           ),
           Align(
