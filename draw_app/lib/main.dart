@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import 'page0_title.dart';
 import 'page1_home.dart';
 import 'page2_draw.dart';
-import 'page3_share.dart';
 import 'page2-1_select.dart';
 import 'page2-2_edit.dart';
+import 'page3_share.dart';
+import 'page4_condition.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:device_preview/device_preview.dart';
 import 'dart:io';
 
 /*
   最新のFlutterに対応するため、動画と少しコードが変わりました
 */
+
 main() {
   final app = App();
-  runApp(app);
+  runApp(
+    DevicePreview(enabled: true, builder: (_) => ProviderScope(child: app)),
+  );
 }
 
 // アプリ全体
@@ -49,6 +55,7 @@ class App extends StatelessWidget {
           return PageC(editedImageFile: file);
         },
       ),
+      GoRoute(path: '/d', builder: (context, state) => PageD()),
     ],
   );
 

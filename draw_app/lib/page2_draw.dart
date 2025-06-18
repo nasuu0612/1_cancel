@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'camera_utils/camera_handler.dart'; //CameraHandlerをインポート
 import 'package:camera/camera.dart'; //XFile用
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:io'; //モバイルのファイル用
 
 class Page2Draw extends StatefulWidget {
@@ -239,9 +240,16 @@ class _Page2DrawState extends State<Page2Draw> {
               ),
             ),
           Align(
-            alignment: Alignment.bottomRight, //画面右下に配置
+            alignment: Alignment.topCenter,
             child: Padding(
-              padding: const EdgeInsets.all(30.0),
+              padding: const EdgeInsets.all(16.0),
+              child: Text("画像を編集してください"),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 mainAxisSize: MainAxisSize.min, //ボタンを最小限の幅にする
                 children: actionButtons, //アクションボタン類を配置

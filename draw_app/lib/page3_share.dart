@@ -17,6 +17,7 @@ class PageC extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     // 画面の上に表示するバー
     final appBar = AppBar(
       backgroundColor: Colors.blue,
@@ -52,6 +53,14 @@ class PageC extends StatelessWidget {
         children: [
           if (editedImageFile != null)
             Center(child: Image.file(editedImageFile!)),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text("完成！",
+              ),
+            ),
+          ),
           Align(
             alignment: Alignment.bottomRight,
             child: Padding(
