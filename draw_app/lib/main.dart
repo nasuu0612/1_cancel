@@ -3,7 +3,10 @@ import 'page0_title.dart';
 import 'page1_home.dart';
 import 'page2_draw.dart';
 import 'page3_share.dart';
+import 'page4_condition.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:device_preview/device_preview.dart';
 
 /*
   最新のFlutterに対応するため、動画と少しコードが変わりました
@@ -11,7 +14,12 @@ import 'package:go_router/go_router.dart';
 
 main() {
   final app = App();
-  runApp(app);
+  runApp(
+    DevicePreview(
+      enabled: true,
+      builder: (_) => ProviderScope(child: app),
+    ),
+  );
 }
 
 // アプリ全体
@@ -23,10 +31,11 @@ class App extends StatelessWidget {
     initialLocation: '/title',
     // パスと画面の組み合わせ
     routes: [
-      GoRoute(path: '/title', builder: (context, state) => const PageTitle()),
-      GoRoute(path: '/a', builder: (context, state) => const PageA()),
-      GoRoute(path: '/b', builder: (context, state) => const PageB()),
-      GoRoute(path: '/c', builder: (context, state) => const PageC()),
+      GoRoute(path: '/title', builder: (context, state) =>PageTitle()),
+      GoRoute(path: '/a', builder: (context, state) => PageA()),
+      GoRoute(path: '/b', builder: (context, state) => PageB()),
+      GoRoute(path: '/c', builder: (context, state) => PageC()),
+      GoRoute(path: '/d', builder: (context, state) => PageD()),
     ],
   );
 
