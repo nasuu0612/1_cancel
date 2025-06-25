@@ -48,6 +48,10 @@ class Page2Select extends StatelessWidget {
       appBar: appBar,
       body: Stack(
         children: [
+          if (_upperImageBytes != null)
+            Center(child: Image.memory(_upperImageBytes, fit: BoxFit.contain))
+          else
+            const Center(child: Text('マスク画像がありません')),
           Align(
             alignment: Alignment.bottomRight,
             child: Padding(
