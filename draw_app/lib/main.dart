@@ -9,6 +9,7 @@ import 'page4_condition.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:device_preview/device_preview.dart';
+import 'dart:typed_data';
 import 'dart:io';
 
 /*
@@ -35,7 +36,13 @@ class App extends StatelessWidget {
       GoRoute(path: '/a', builder: (context, state) => const PageA()),
       //GoRoute(path: '/b', builder: (context, state) => const PageB()),
       GoRoute(path: '/b', builder: (context, state) => const Page2Draw()),
-      GoRoute(path: '/b1', builder: (context, state) => const Page2Select()),
+      GoRoute(
+        path: '/b1',
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          return Page2Select(underImageFile: args['underImageFile'] as File);
+        },
+      ),
       GoRoute(
         path: '/b2',
         builder: (context, state) {
