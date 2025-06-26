@@ -40,10 +40,7 @@ class App extends StatelessWidget {
         path: '/b1',
         builder: (context, state) {
           final args = state.extra as Map<String, dynamic>;
-          return Page2Select(
-            underImageFile: args['underImageFile'] as File,
-            upperImageBytes: args['upperImageBytes'] as Uint8List,
-          );
+          return Page2Select(underImageFile: args['underImageFile'] as File);
         },
       ),
       GoRoute(
