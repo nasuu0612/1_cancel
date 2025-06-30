@@ -18,20 +18,10 @@ class _Page2DrawState extends State<Page2Draw> {
   final CameraHandler _cameraHandler = CameraHandler();
   XFile? _imageFile; //キャプチャした画像を保存する変数
   bool _showCameraPreview = false;
-  Uint8List? _upperImageBytes; // ダミーで読み込むマスク画像
 
   @override
   void initState() {
     super.initState();
-    _loadDummyMask();
-  }
-
-  Future<void> _loadDummyMask() async {
-    // assets/images/mask.png を読み込む
-    final bytes = await rootBundle.load('assets/images/mask.png');
-    setState(() {
-      _upperImageBytes = bytes.buffer.asUint8List();
-    });
   }
 
   @override
@@ -42,15 +32,9 @@ class _Page2DrawState extends State<Page2Draw> {
 
   //完了ボタンのアクション(元のファイルのpushメソッドの部分)
   void _completeAndProceed() {
-    if (_imageFile != null && _upperImageBytes != null) {
+    if (_imageFile != null) {
       // カメラ画像（downer）とマスク画像（upper）をpage2-1_selectに渡す
-      context.push(
-        '/b1',
-        extra: {
-          'underImageFile': File(_imageFile!.path),
-          'upperImageBytes': _upperImageBytes,
-        },
-      );
+      context.push('/b1', extra: {'underImageFile': File(_imageFile!.path)});
     } else {
       ScaffoldMessenger.of(
         context,
@@ -217,28 +201,6 @@ class _Page2DrawState extends State<Page2Draw> {
       body: Stack(
         children: [
           mainContent, //カメラプレビューor画像or初期メッセージ
-          if (_upperImageBytes != null)
-            Positioned(
-              top: 30,
-              left: 30,
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.green, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                ),
-                child: Column(
-                  children: [
-                    const Text('マスク画像（ダミー）プレビュー'),
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: Image.memory(_upperImageBytes!),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           Align(
             alignment: Alignment.topCenter,
             child: Padding(
