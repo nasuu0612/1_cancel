@@ -28,8 +28,6 @@ class _Page2SelectState extends State<Page2Select> {
   Uint8List? previewImageBytes; // UI上に表示するプレビュー画像
   bool isMerging = false; // 合成処理中かどうか
 
-  final int resizeWidth = 512; // 出力PNG画像の横幅（圧縮目的）
-
   @override
   void initState() {
     super.initState();
@@ -65,11 +63,7 @@ class _Page2SelectState extends State<Page2Select> {
 
     // プレビュー用画像を初期表示に設定
     if (decodedLineImage != null) {
-      final resized = await compute(resizeImage, {
-        'image': decodedLineImage!,
-        'width': resizeWidth,
-      });
-      previewImageBytes = Uint8List.fromList(img.encodePng(resized));
+      previewImageBytes = Uint8List.fromList(img.encodePng(decodedLineImage!));
     }
 
     setState(() {});
@@ -112,12 +106,7 @@ class _Page2SelectState extends State<Page2Select> {
       }
     }
 
-    final resized = await compute(resizeImage, {
-      'image': output,
-      'width': resizeWidth,
-    });
-
-    return Uint8List.fromList(img.encodePng(resized));
+    return Uint8List.fromList(img.encodePng(output));
   }
 
   // 選択されたマスク領域を赤色でハイライト表示する
@@ -138,11 +127,7 @@ class _Page2SelectState extends State<Page2Select> {
       }
     }
 
-    final resized = await compute(resizeImage, {
-      'image': base,
-      'width': resizeWidth,
-    });
-    return Uint8List.fromList(img.encodePng(resized));
+    return Uint8List.fromList(img.encodePng(base));
   }
 
   // タップ座標を画像座標に変換
@@ -231,7 +216,6 @@ class _Page2SelectState extends State<Page2Select> {
                             ? Image.memory(
                                 previewImageBytes!,
                                 fit: BoxFit.contain,
-                                cacheWidth: resizeWidth,
                               )
                             : Container(),
                       ),
@@ -258,9 +242,3 @@ class _Page2SelectState extends State<Page2Select> {
 
 // --- computeで使う関数（トップレベル） ---
 img.Image? decodeImage(Uint8List bytes) => img.decodePng(bytes);
-
-img.Image resizeImage(Map<String, dynamic> args) {
-  final img.Image image = args['image'];
-  final int width = args['width'];
-  return img.copyResize(image, width: width);
-}
