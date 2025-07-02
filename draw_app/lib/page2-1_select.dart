@@ -27,6 +27,8 @@ class _Page2SelectState extends State<Page2Select> {
   Uint8List? previewImageBytes; // UI上に表示するプレビュー画像
   bool isMerging = false; // 合成処理中かどうか
 
+  final int resizeWidth = 512; // 出力PNG画像の横幅（圧縮目的）
+
   @override
   void initState() {
     super.initState();
@@ -60,7 +62,8 @@ class _Page2SelectState extends State<Page2Select> {
 
     // プレビュー用画像を初期表示に設定
     if (decodedLineImage != null) {
-      previewImageBytes = Uint8List.fromList(img.encodePng(decodedLineImage!));
+      final resized = img.copyResize(decodedLineImage!, width: resizeWidth);
+      previewImageBytes = Uint8List.fromList(img.encodePng(resized));
     }
 
     setState(() {});
@@ -93,7 +96,8 @@ class _Page2SelectState extends State<Page2Select> {
       }
     }
 
-    return Uint8List.fromList(img.encodePng(output));
+    final resized = img.copyResize(output, width: resizeWidth);
+    return Uint8List.fromList(img.encodePng(resized));
   }
 
   // 選択されたマスク領域を赤色でハイライト表示する
@@ -114,7 +118,8 @@ class _Page2SelectState extends State<Page2Select> {
       }
     }
 
-    return Uint8List.fromList(img.encodePng(base));
+    final resized = img.copyResize(base, width: resizeWidth);
+    return Uint8List.fromList(img.encodePng(resized));
   }
 
   // タップ座標を画像座標に変換
@@ -203,7 +208,7 @@ class _Page2SelectState extends State<Page2Select> {
                             ? Image.memory(
                                 previewImageBytes!,
                                 fit: BoxFit.contain,
-                                cacheWidth: 512,
+                                cacheWidth: resizeWidth,
                               )
                             : Container(),
                       ),
