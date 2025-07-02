@@ -88,17 +88,27 @@ class _Page2SelectState extends State<Page2Select> {
     return null;
   }
 
-  // 指定された領域だけを除いて、他のマスクをすべて線画に合成する
-  Future<Uint8List?> mergeLayersExcludingSelected(int excludeIndex) async {
-    if (decodedLineImage == null) return null;
+  // illust.pngから選択された領域だけを透明化して返す
+  Future<Uint8List?> removeSelectedRegionFromIllust(int selectedIndex) async {
+    final data = await rootBundle.load('assets/PaintApp_illust/illust.png');
+    final illust = img.decodePng(data.buffer.asUint8List());
+    if (illust == null ||
+        selectedIndex < 0 ||
+        selectedIndex >= decodedMasks.length) {
+      return null;
+    }
 
-    final output = img.Image.from(decodedLineImage!);
+    final mask = decodedMasks[selectedIndex];
+    if (mask == null) return null;
 
-    for (int i = 0; i < decodedMasks.length; i++) {
-      if (i == excludeIndex) continue; // 除外対象(選ばれた領域)はスキップ
-      final mask = decodedMasks[i];
-      if (mask != null) {
-        img.compositeImage(output, mask);
+    final output = img.Image.from(illust);
+
+    for (int y = 0; y < mask.height; y++) {
+      for (int x = 0; x < mask.width; x++) {
+        final maskPixel = mask.getPixel(x, y);
+        if (maskPixel.a > 0) {
+          output.setPixelRgba(x, y, 0, 0, 0, 0); // 透明にする
+        }
       }
     }
 
@@ -106,6 +116,7 @@ class _Page2SelectState extends State<Page2Select> {
       'image': output,
       'width': resizeWidth,
     });
+
     return Uint8List.fromList(img.encodePng(resized));
   }
 
@@ -187,7 +198,7 @@ class _Page2SelectState extends State<Page2Select> {
 
     setState(() => isMerging = true);
 
-    final merged = await mergeLayersExcludingSelected(selectedRegionIndex!);
+    final merged = await removeSelectedRegionFromIllust(selectedRegionIndex!);
 
     setState(() => isMerging = false);
 
