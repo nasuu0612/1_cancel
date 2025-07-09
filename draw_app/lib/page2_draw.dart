@@ -22,6 +22,10 @@ class _Page2DrawState extends State<Page2Draw> {
   @override
   void initState() {
     super.initState();
+    // ページが表示されたときに自動的にカメラを起動
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startCamera();
+    });
   }
 
   @override
@@ -135,7 +139,17 @@ class _Page2DrawState extends State<Page2Draw> {
         ),
       );
     } else {
-      mainContent = const Center(child: Text('「カメラ起動」ボタンを押して撮影してください'));
+      //初期状態（カメラ起動中の表示）
+      mainContent = const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('カメラを起動しています...'),
+          ],
+        ),
+      );
     }
 
     List<Widget> actionButtons = [];
@@ -179,7 +193,7 @@ class _Page2DrawState extends State<Page2Draw> {
         ),
       ];
     } else {
-      //初期状態
+      //初期状態（カメラ起動中またはエラー時）
       actionButtons = [
         ElevatedButton(
           onPressed: _goBack, //通常の戻る動作
@@ -189,9 +203,9 @@ class _Page2DrawState extends State<Page2Draw> {
         const SizedBox(width: 70), //元のレイアウトに合わせる
 
         ElevatedButton(
-          onPressed: _startCamera, //カメラ起動
+          onPressed: _startCamera, //手動でカメラ再起動
           style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-          child: const Text('カメラ起動'),
+          child: const Text('カメラ再起動'),
         ),
       ];
     }
@@ -205,7 +219,13 @@ class _Page2DrawState extends State<Page2Draw> {
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text("画像を編集してください"),
+              child: Text("写真を撮影してください！",
+                  style: GoogleFonts.mPlus1p(
+                    textStyle: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )),
             ),
           ),
           Align(
