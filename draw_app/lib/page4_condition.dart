@@ -54,7 +54,7 @@ class PageD extends ConsumerWidget {
     final homeButton = ElevatedButton(
       onPressed: () => context.go("/a"),
       style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-      child: const Text('ホームへ'),
+      child: const Text('決定'),
     );
 
     return Scaffold(
