@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PageC extends StatelessWidget {
   final File? editedImageFile;
@@ -13,18 +16,46 @@ class PageC extends StatelessWidget {
     context.push('/a');
   }
 
-  // 画像を保存する関数
-  Future<void> saveImage(BuildContext context) async {
+  // ギャラリーへ画像保存
+  Future<void> saveImageToGallery(BuildContext context) async {
     if (editedImageFile == null) return;
 
     try {
-      final directory = await getApplicationDocumentsDirectory(); // 端末の保存先
-      final newPath = '${directory.path}/nuri_image.png'; // 保存先ファイル名
-      final newFile = await editedImageFile!.copy(newPath);
+      // パーミッション要求（iOS/Android）
+      if (Platform.isAndroid) {
+        final status = await Permission.storage.request();
+        if (!status.isGranted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("保存の権限がありません")));
+          return;
+        }
+      } else if (Platform.isIOS) {
+        final status = await Permission.photosAddOnly.request();
+        if (!status.isGranted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("写真のアクセスが拒否されました")));
+          return;
+        }
+      }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("保存しました: ${newFile.path}")));
+      final Uint8List bytes = await editedImageFile!.readAsBytes();
+      final result = await ImageGallerySaver.saveImage(
+        bytes,
+        quality: 100,
+        name: "nuri_image_${DateTime.now().millisecondsSinceEpoch}",
+      );
+
+      if (result['isSuccess'] == true) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("写真アプリに保存しました！")));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("保存に失敗しました")));
+      }
     } catch (e) {
       debugPrint("保存エラー: $e");
       ScaffoldMessenger.of(
@@ -33,7 +64,7 @@ class PageC extends StatelessWidget {
     }
   }
 
-  // シェア機能（SNS共有など）
+  // シェア機能
   Future<void> shareImage(BuildContext context) async {
     if (editedImageFile == null) return;
 
@@ -63,7 +94,7 @@ class PageC extends StatelessWidget {
     );
 
     final saveButton = ElevatedButton(
-      onPressed: () => saveImage(context),
+      onPressed: () => saveImageToGallery(context),
       style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
       child: const Text('保存'),
     );
@@ -80,12 +111,9 @@ class PageC extends StatelessWidget {
         children: [
           if (editedImageFile != null)
             Center(child: Image.file(editedImageFile!)),
-          Align(
+          const Align(
             alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: const Text("完成！"),
-            ),
+            child: Padding(padding: EdgeInsets.all(16.0), child: Text("完成！")),
           ),
           Align(
             alignment: Alignment.bottomRight,
