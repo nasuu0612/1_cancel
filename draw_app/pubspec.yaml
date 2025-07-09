@@ -18,12 +18,14 @@ dependencies:
   image: ^4.5.4
   path_provider: ^2.0.15
   path: ^1.8.0
+  share_plus:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   google_fonts: 
   percent_indicator:
   cupertino_icons: ^1.0.8
+  shared_preferences: 
   
 
 dev_dependencies:

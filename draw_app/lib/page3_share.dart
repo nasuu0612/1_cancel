@@ -1,52 +1,79 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
-//
-// 画面 C
-//
 class PageC extends StatelessWidget {
   final File? editedImageFile;
 
   const PageC({Key? key, this.editedImageFile}) : super(key: key);
 
   push(BuildContext context) {
-    // 画面 a へ進む
     context.push('/a');
+  }
+
+  // 画像を保存する関数
+  Future<void> saveImage(BuildContext context) async {
+    if (editedImageFile == null) return;
+
+    try {
+      final directory = await getApplicationDocumentsDirectory(); // 端末の保存先
+      final newPath = '${directory.path}/nuri_image.png'; // 保存先ファイル名
+      final newFile = await editedImageFile!.copy(newPath);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("保存しました: ${newFile.path}")));
+    } catch (e) {
+      debugPrint("保存エラー: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("保存に失敗しました")));
+    }
+  }
+
+  // シェア機能（SNS共有など）
+  Future<void> shareImage(BuildContext context) async {
+    if (editedImageFile == null) return;
+
+    try {
+      await Share.shareXFiles([
+        XFile(editedImageFile!.path),
+      ], text: '私の塗り絵作品を見てね！');
+    } catch (e) {
+      debugPrint("シェアエラー: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("シェアに失敗しました")));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
-    // 画面の上に表示するバー
     final appBar = AppBar(
       backgroundColor: Colors.blue,
       title: const Text('Share'),
     );
 
     final shareButton = ElevatedButton(
-      onPressed: () => push(context),
-      // MEMO: primary は古くなったので backgroundColor へ変更しました
+      onPressed: () => shareImage(context),
       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
       child: const Text('シェア'),
     );
 
     final saveButton = ElevatedButton(
-      onPressed: () => push(context),
-      // MEMO: primary は古くなったので backgroundColor へ変更しました
+      onPressed: () => saveImage(context),
       style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
       child: const Text('保存'),
     );
 
-    // 戻るボタン
     final homeButton = ElevatedButton(
       onPressed: () => push(context),
-      // MEMO: primary は古くなったので backgroundColor へ変更しました
       style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
       child: const Text('ホームへ'),
     );
 
-    // 画面全体
     return Scaffold(
       appBar: appBar,
       body: Stack(
@@ -57,8 +84,7 @@ class PageC extends StatelessWidget {
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text("完成！",
-              ),
+              child: const Text("完成！"),
             ),
           ),
           Align(
@@ -69,9 +95,9 @@ class PageC extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   shareButton,
-                  const SizedBox(width: 10), // ボタンの間のスペース
+                  const SizedBox(width: 10),
                   saveButton,
-                  const SizedBox(width: 10), // ボタンの間のスペース
+                  const SizedBox(width: 10),
                   homeButton,
                 ],
               ),

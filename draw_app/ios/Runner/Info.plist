@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>画像を保存するためにフォトライブラリへのアクセスを許可してください。</string>
 </dict>
 </plist>

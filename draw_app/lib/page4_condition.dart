@@ -2,10 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math' as math;
 
-final GetUpTimeProvider = StateProvider<TimeOfDay>((ref) {
-  return const TimeOfDay(hour: 8, minute: 0); // 初期時間 8:00
+// SharedPreferencesを使用した永続化対応のStateNotifier
+class GetUpTimeNotifier extends StateNotifier<TimeOfDay> {
+  GetUpTimeNotifier() : super(const TimeOfDay(hour: 8, minute: 0)) {
+    _loadTime();
+  }
+
+  // 保存された時刻を読み込み
+  Future<void> _loadTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hour = prefs.getInt('getup_hour') ?? 8;
+    final minute = prefs.getInt('getup_minute') ?? 0;
+    state = TimeOfDay(hour: hour, minute: minute);
+  }
+
+  // 時刻を更新して保存
+  Future<void> updateTime(TimeOfDay newTime) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('getup_hour', newTime.hour);
+    await prefs.setInt('getup_minute', newTime.minute);
+    state = newTime;
+  }
+}
+
+final GetUpTimeProvider = StateNotifierProvider<GetUpTimeNotifier, TimeOfDay>((
+  ref,
+) {
+  return GetUpTimeNotifier();
 });
 
 class PageD extends ConsumerWidget {
@@ -51,7 +77,9 @@ class PageD extends ConsumerWidget {
                   child: AnalogTimePicker(
                     initialTime: getUpTime,
                     onTimeChanged: (TimeOfDay selectedTime) {
-                      ref.read(GetUpTimeProvider.notifier).state = selectedTime;
+                      ref
+                          .read(GetUpTimeProvider.notifier)
+                          .updateTime(selectedTime);
                     },
                   ),
                 ),
@@ -316,37 +344,31 @@ class _AnalogTimePickerState extends State<AnalogTimePicker> {
 
         // アナログ時計
         Expanded(
-          child: CustomPaint(
-            painter: ClockPainter(
-              selectedTime: _selectedTime,
-              isSelectingHour: _isSelectingHour,
-              onTimeChanged: _updateTime,
-            ),
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                RenderBox box = context.findRenderObject() as RenderBox;
-                Offset localPosition = box.globalToLocal(
-                  details.globalPosition,
-                );
-                Offset center = Offset(box.size.width / 2, box.size.height / 2);
-                Offset relative = localPosition - center;
-                double angle =
-                    math.atan2(relative.dy, relative.dx) + math.pi / 2;
-                if (angle < 0) angle += 2 * math.pi;
-                _updateTime(angle);
-              },
-              onTapUp: (details) {
-                RenderBox box = context.findRenderObject() as RenderBox;
-                Offset localPosition = box.globalToLocal(
-                  details.globalPosition,
-                );
-                Offset center = Offset(box.size.width / 2, box.size.height / 2);
-                Offset relative = localPosition - center;
-                double angle =
-                    math.atan2(relative.dy, relative.dx) + math.pi / 2;
-                if (angle < 0) angle += 2 * math.pi;
-                _updateTime(angle);
-              },
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              RenderBox box = context.findRenderObject() as RenderBox;
+              Offset localPosition = box.globalToLocal(details.globalPosition);
+              Offset center = Offset(box.size.width / 2, box.size.height / 2);
+              Offset relative = localPosition - center;
+              double angle = math.atan2(relative.dy, relative.dx) + math.pi / 2;
+              if (angle < 0) angle += 2 * math.pi;
+              _updateTime(angle);
+            },
+            onTapUp: (details) {
+              RenderBox box = context.findRenderObject() as RenderBox;
+              Offset localPosition = box.globalToLocal(details.globalPosition);
+              Offset center = Offset(box.size.width / 2, box.size.height / 2);
+              Offset relative = localPosition - center;
+              double angle = math.atan2(relative.dy, relative.dx) + math.pi / 2;
+              if (angle < 0) angle += 2 * math.pi;
+              _updateTime(angle);
+            },
+            child: CustomPaint(
+              painter: ClockPainter(
+                selectedTime: _selectedTime,
+                isSelectingHour: _isSelectingHour,
+                onTimeChanged: _updateTime,
+              ),
               child: Container(width: double.infinity, height: double.infinity),
             ),
           ),
