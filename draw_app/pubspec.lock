@@ -413,7 +413,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.4"
-<<<<<<< HEAD
   image_gallery_saver:
     dependency: "direct main"
     description:
@@ -422,8 +421,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.3"
-=======
->>>>>>> main
   intl:
     dependency: transitive
     description:
@@ -616,7 +613,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.2.5"
-<<<<<<< HEAD
   permission_handler:
     dependency: "direct main"
     description:
@@ -665,8 +661,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
-=======
->>>>>>> main
   petitparser:
     dependency: transitive
     description:
