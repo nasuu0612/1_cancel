@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:go_router/go_router.dart';
 import 'package:image/image.dart' as img;
+import 'package:flutter/foundation.dart'; // computeを使うため
 
 // b1
 
@@ -48,15 +49,17 @@ class _Page2SelectState extends State<Page2Select> {
     // 各マスク画像を読み込んで decodePng して配列に追加
     for (var path in maskAssetPaths) {
       final data = await rootBundle.load(path);
-      final bytes = data.buffer.asUint8List();
-      final decoded = img.decodePng(bytes);
+      final decoded = await compute(decodeImage, data.buffer.asUint8List());
       decodedMasks.add(decoded);
     }
 
     // 線画画像(line.png)を読み込んで保持
     final lineData = await rootBundle.load('assets/PaintApp_illust/line.png');
-    final lineBytes = lineData.buffer.asUint8List();
-    decodedLineImage = img.decodePng(lineBytes);
+    final decodedLine = await compute(
+      decodeImage,
+      lineData.buffer.asUint8List(),
+    );
+    decodedLineImage = decodedLine;
 
     // プレビュー用画像を初期表示に設定
     if (decodedLineImage != null) {
@@ -79,17 +82,27 @@ class _Page2SelectState extends State<Page2Select> {
     return null;
   }
 
-  // 指定された領域だけを除いて、他のマスクをすべて線画に合成する
-  Future<Uint8List?> mergeLayersExcludingSelected(int excludeIndex) async {
-    if (decodedLineImage == null) return null;
+  // illust.pngから選択された領域だけを透明化して返す
+  Future<Uint8List?> removeSelectedRegionFromIllust(int selectedIndex) async {
+    final data = await rootBundle.load('assets/PaintApp_illust/illust.png');
+    final illust = img.decodePng(data.buffer.asUint8List());
+    if (illust == null ||
+        selectedIndex < 0 ||
+        selectedIndex >= decodedMasks.length) {
+      return null;
+    }
 
-    final output = img.Image.from(decodedLineImage!);
+    final mask = decodedMasks[selectedIndex];
+    if (mask == null) return null;
 
-    for (int i = 0; i < decodedMasks.length; i++) {
-      if (i == excludeIndex) continue; // 除外対象(選ばれた領域)はスキップ
-      final mask = decodedMasks[i];
-      if (mask != null) {
-        img.compositeImage(output, mask);
+    final output = img.Image.from(illust);
+
+    for (int y = 0; y < mask.height; y++) {
+      for (int x = 0; x < mask.width; x++) {
+        final maskPixel = mask.getPixel(x, y);
+        if (maskPixel.a > 0) {
+          output.setPixelRgba(x, y, 0, 0, 0, 0); // 透明にする
+        }
       }
     }
 
@@ -97,7 +110,7 @@ class _Page2SelectState extends State<Page2Select> {
   }
 
   // 選択されたマスク領域を赤色でハイライト表示する
-  Uint8List? applyHighlight(int index) {
+  Future<Uint8List?> applyHighlight(int index) async {
     if (decodedLineImage == null || index < 0 || index >= decodedMasks.length)
       return null;
 
@@ -132,7 +145,7 @@ class _Page2SelectState extends State<Page2Select> {
   }
 
   // タップされたときの処理
-  void onTapDown(TapDownDetails details, BoxConstraints constraints) {
+  void onTapDown(TapDownDetails details, BoxConstraints constraints) async {
     if (decodedLineImage == null) return;
 
     final pos = convertToImageCoordinates(
@@ -150,7 +163,7 @@ class _Page2SelectState extends State<Page2Select> {
       return;
     }
 
-    final highlighted = applyHighlight(tappedIndex);
+    final highlighted = await applyHighlight(tappedIndex);
     if (highlighted == null) return;
 
     setState(() {
@@ -170,7 +183,7 @@ class _Page2SelectState extends State<Page2Select> {
 
     setState(() => isMerging = true);
 
-    final merged = await mergeLayersExcludingSelected(selectedRegionIndex!);
+    final merged = await removeSelectedRegionFromIllust(selectedRegionIndex!);
 
     setState(() => isMerging = false);
 
@@ -203,7 +216,6 @@ class _Page2SelectState extends State<Page2Select> {
                             ? Image.memory(
                                 previewImageBytes!,
                                 fit: BoxFit.contain,
-                                cacheWidth: 512,
                               )
                             : Container(),
                       ),
@@ -227,3 +239,6 @@ class _Page2SelectState extends State<Page2Select> {
     );
   }
 }
+
+// --- computeで使う関数（トップレベル） ---
+img.Image? decodeImage(Uint8List bytes) => img.decodePng(bytes);
