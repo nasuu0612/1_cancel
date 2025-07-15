@@ -92,9 +92,8 @@ class _Page2SelectState extends State<Page2Select> {
 
   // illust.pngから選択された領域だけを透明化して返す
   Future<Uint8List?> removeSelectedRegionFromIllust(int selectedIndex) async {
-    final data = await rootBundle.load('assets/PaintApp_illust/illust.png');
-    final illust = img.decodePng(data.buffer.asUint8List());
-    if (illust == null ||
+    if (decodedIllustImage == null ||
+        decodedLineImage == null ||
         selectedIndex < 0 ||
         selectedIndex >= decodedMasks.length) {
       return null;
@@ -102,19 +101,38 @@ class _Page2SelectState extends State<Page2Select> {
 
     final mask = decodedMasks[selectedIndex];
     if (mask == null) return null;
+    final base = img.Image.from(decodedIllustImage!);
+    final baseBytes = base.getBytes();
+    final lineBytes = decodedLineImage!.getBytes();
 
-    final output = img.Image.from(illust);
+    final width = base.width;
+    final height = base.height;
 
-    for (int y = 0; y < mask.height; y++) {
-      for (int x = 0; x < mask.width; x++) {
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
         final maskPixel = mask.getPixel(x, y);
         if (maskPixel.a > 0) {
-          output.setPixelRgba(x, y, 0, 0, 0, 0); // 透明にする
+          final i = (y * width + x) * 4;
+
+          // 1. 塗り絵画像を透明にする
+          baseBytes[i] = 0;
+          baseBytes[i + 1] = 0;
+          baseBytes[i + 2] = 0;
+          baseBytes[i + 3] = 0;
+
+          // 2. 線画があるならそこだけ描画
+          final lineA = lineBytes[i + 3];
+          if (lineA > 0) {
+            baseBytes[i] = lineBytes[i]; // R
+            baseBytes[i + 1] = lineBytes[i + 1]; // G
+            baseBytes[i + 2] = lineBytes[i + 2]; // B
+            baseBytes[i + 3] = lineBytes[i + 3]; // A
+          }
         }
       }
     }
 
-    return Uint8List.fromList(img.encodePng(output));
+    return Uint8List.fromList(img.encodePng(base));
   }
 
   // 選択されたマスク領域を赤色でハイライト表示する
