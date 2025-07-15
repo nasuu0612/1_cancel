@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PageC extends StatelessWidget {
@@ -21,8 +21,9 @@ class PageC extends StatelessWidget {
     if (editedImageFile == null) return;
 
     try {
+      //パーミッションはGalを使う場合は不要らしいです(Androidでは確認しています)
       // パーミッション要求（iOS/Android）
-      if (Platform.isAndroid) {
+      /*if (Platform.isAndroid) {
         final status = await Permission.storage.request();
         if (!status.isGranted) {
           ScaffoldMessenger.of(
@@ -38,24 +39,30 @@ class PageC extends StatelessWidget {
           ).showSnackBar(const SnackBar(content: Text("写真のアクセスが拒否されました")));
           return;
         }
-      }
+      }*/
 
-      final Uint8List bytes = await editedImageFile!.readAsBytes();
-      final result = await ImageGallerySaver.saveImage(
-        bytes,
-        quality: 100,
-        name: "nuri_image_${DateTime.now().millisecondsSinceEpoch}",
+      // 新しいファイル名で一時ファイルを作成
+      final dir = await getTemporaryDirectory();
+      final timestamp = DateTime.now();
+      
+      //ファイル名フォーマット(変更可)
+      final formattedDate = '${timestamp.year}年${timestamp.month.toString().padLeft(2, '0')}月${timestamp.day.toString().padLeft(2, '0')}日_${timestamp.hour.toString().padLeft(2, '0')}時${timestamp.minute.toString().padLeft(2, '0')}分';
+      final newFileName = '保存されたもの_$formattedDate.png';
+      
+      final newFile = File('${dir.path}/$newFileName');
+      
+      // 元のファイルを新しい名前でコピー
+      await editedImageFile!.copy(newFile.path);
+      
+      // 新しいファイル名でギャラリーに保存
+      await Gal.putImage(newFile.path);
+
+      if(!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("保存しました"))
       );
-
-      if (result['isSuccess'] == true) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("写真アプリに保存しました！")));
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("保存に失敗しました")));
-      }
+      
     } catch (e) {
       debugPrint("保存エラー: $e");
       ScaffoldMessenger.of(
