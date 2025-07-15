@@ -23,6 +23,7 @@ class _Page2SelectState extends State<Page2Select> {
 
   List<img.Image?> decodedMasks = []; // 各マスク画像のデコード結果を保持
   img.Image? decodedLineImage; // 線画画像（line.png）
+  img.Image? decodedIllustImage; // 塗り絵画像（illust.png）
 
   int? selectedRegionIndex; // ユーザーが選択したマスク番号
   Uint8List? previewImageBytes; // UI上に表示するプレビュー画像
@@ -55,11 +56,18 @@ class _Page2SelectState extends State<Page2Select> {
 
     // 線画画像(line.png)を読み込んで保持
     final lineData = await rootBundle.load('assets/PaintApp_illust/line.png');
-    final decodedLine = await compute(
+    decodedLineImage = await compute(
       decodeImage,
       lineData.buffer.asUint8List(),
     );
-    decodedLineImage = decodedLine;
+
+    final illustData = await rootBundle.load(
+      'assets/PaintApp_illust/illust.png',
+    );
+    decodedIllustImage = await compute(
+      decodeImage,
+      illustData.buffer.asUint8List(),
+    );
 
     // プレビュー用画像を初期表示に設定
     if (decodedLineImage != null) {
@@ -111,10 +119,14 @@ class _Page2SelectState extends State<Page2Select> {
 
   // 選択されたマスク領域を赤色でハイライト表示する
   Future<Uint8List?> applyHighlight(int index) async {
-    if (decodedLineImage == null || index < 0 || index >= decodedMasks.length)
+    if (decodedLineImage == null ||
+        decodedIllustImage == null ||
+        index < 0 ||
+        index >= decodedMasks.length) {
       return null;
+    }
 
-    final base = img.Image.from(decodedLineImage!);
+    final base = img.Image.from(decodedIllustImage!);
     final mask = decodedMasks[index];
     if (mask == null) return null;
 
@@ -122,7 +134,33 @@ class _Page2SelectState extends State<Page2Select> {
       for (int x = 0; x < mask.width; x++) {
         final pixel = mask.getPixel(x, y);
         if (pixel.a > 0) {
-          base.setPixelRgba(x, y, 255, 0, 0, 128); // 赤の半透明で重ねる
+          base.setPixelRgba(x, y, 255, 0, 0, 128);
+        }
+      }
+    }
+
+    if (decodedLineImage != null) {
+      final baseBytes = base.getBytes();
+      final baseWidth = base.width;
+      final lineBytes = decodedLineImage!.getBytes();
+      final lineWidth = decodedLineImage!.width;
+
+      for (int y = 0; y < decodedLineImage!.height; y++) {
+        for (int x = 0; x < decodedLineImage!.width; x++) {
+          final lineIndex = (y * lineWidth + x) * 4;
+          final lineA = lineBytes[lineIndex + 3];
+          if (lineA > 0) {
+            final baseIndex = (y * baseWidth + x) * 4;
+            final r = baseBytes[baseIndex];
+            final g = baseBytes[baseIndex + 1];
+            final b = baseBytes[baseIndex + 2];
+            if (!(r == 0 && g == 0 && b == 0)) {
+              baseBytes[baseIndex] = lineBytes[lineIndex];
+              baseBytes[baseIndex + 1] = lineBytes[lineIndex + 1];
+              baseBytes[baseIndex + 2] = lineBytes[lineIndex + 2];
+              baseBytes[baseIndex + 3] = lineBytes[lineIndex + 3];
+            }
+          }
         }
       }
     }
