@@ -16,55 +16,53 @@ class PageTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-       
-
     // 進むボタン
     final goButton = ElevatedButton(
       onPressed: () => push(context),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(30), // 丸みを強調
+        ),
+        elevation: 6,
+        shadowColor: Colors.orange.shade200,
+      ),
+      child: Text(
+        'はじめる',
+        style: GoogleFonts.yuseiMagic(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
       ),
-      child: Text('Start'),
     );
-   
-        
-        
-        
+
     //タイトルの文字
-    final text=Text("テストアプリ",
-      style:GoogleFonts.yuseiMagic(
-        fontSize:40,
-        color:Colors.brown
-        ),
-      
-      );
+    final text = Text(
+      "あさぬり",
+      style: GoogleFonts.yuseiMagic(fontSize: 40, color: Colors.brown),
+    );
     //写真
     final Size screenSize = MediaQuery.of(context).size;
     final double screenWidth = screenSize.width;
     final double screenHeight = screenSize.height;
-    final img=Image.asset("assets/images/RunningArtist.PNG");
-    final con=Container(
-      width:screenWidth*0.7,
-      height:screenHeight*0.7,
-      child:img,
+    final img = Image.asset("assets/images/RunningArtist.PNG");
+    final con = Container(
+      width: screenWidth * 0.7,
+      height: screenHeight * 0.7,
+      child: img,
     );
-    
+
     // 画面全体
     return Scaffold(
       body: Stack(
         children: [
           Align(
-            alignment:const Alignment(0.0,0.0),
+            alignment: const Alignment(0.0, 0.0),
             child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  text,
-                  con,
-                  goButton,
-                ],
+              mainAxisSize: MainAxisSize.min,
+              children: [text, con, goButton],
             ),
           ),
         ],

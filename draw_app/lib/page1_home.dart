@@ -61,7 +61,7 @@ class PageA extends ConsumerWidget {
         style: GoogleFonts.yuseiMagic(fontSize: 20, color: Colors.brown),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.lightGreen,
         fixedSize: const Size(130, 50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
